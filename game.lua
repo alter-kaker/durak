@@ -59,7 +59,32 @@ function Game:start()
         self.deck:shuffle()
         self.trump_suit = self.deck[1].suit
         self.players:refill(self.deck)
+
+        local starting_player_idx = self:starting_player()
+        if starting_player_idx then
+            self.players.current = starting_player_idx
+        end
     end
+end
+
+function Game:starting_player()
+    local lowest_trump
+    local starting_player_idx
+    for player_idx = 1, #self.players do
+        for _, card in ipairs(self.players[player_idx].hand) do
+            if card.suit == self.trump_suit then
+                if not lowest_trump or card.rank < lowest_trump then
+                    lowest_trump = card.rank
+                    if lowest_trump == 6 then
+                        return player_idx
+                    end
+                    starting_player_idx = player_idx
+                end
+            end
+        end
+    end
+
+    return starting_player_idx
 end
 
 function Game:put_down(card)
@@ -138,8 +163,12 @@ function Game:draw()
         for player_idx = 1, #self.players do
             local player = self.players[player_idx]
             love.graphics.setColor(1, 1, 1)
-            love.graphics.print(player.name, 5, ((player_idx - 1) * 110) + 10)
-            for card_idx, card in ipairs(player.hand) do
+            local name_scale = 1
+            if player_idx == self.players:get_current_idx() then
+                name_scale = 1.5
+            end
+            love.graphics.print(player.name, 5, ((player_idx - 1) * 110) + 10, 0, name_scale)
+            for _, card in ipairs(player.hand) do
                 card:draw()
                 if player_idx == self.players:get_current_idx() and card:touched() then
                     card:highlight()
