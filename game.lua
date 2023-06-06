@@ -49,13 +49,13 @@ function Game:load(names)
 
     local decks = #self.players / 2
     self.deck = Deck:new(decks, images)
-    self.trump_suit = self.deck[1].suit
 end
 
 function Game:start()
     if self.move == START then
         self.move = ATTACKING
         self.deck:shuffle()
+        self.trump_suit = self.deck[1].suit
         for player_idx = 1, #self.players do
             local player = self.players[player_idx]
             for _ = 1, 7 do
@@ -82,6 +82,7 @@ function Game:put_down(card)
         end
     elseif self.move == DEFENDING then
         local attack_card = self.mat:get_current_play()[1]
+        print(self.trump_suit)
         if (card.suit == self.trump_suit and
                 attack_card.suit ~= self.trump_suit)
             or (card.suit == attack_card.suit
