@@ -29,7 +29,7 @@ function Mat:push_discard(card)
     table.insert(self.discard_pile, card)
 end
 
-function Mat:get_current_play()
+function Mat:get_current_stack()
     return self.in_play[#self.in_play] or {}
 end
 

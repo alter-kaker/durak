@@ -58,23 +58,18 @@ function Game:start()
         self.move = ATTACKING
         self.deck:shuffle()
         self.trump_suit = self.deck[1].suit
-        for player_idx = 1, #self.players do
-            local player = self.players[player_idx]
-            for _ = 1, 7 do
-                local card = self.deck:pop()
-                self.players:push_card(card, player_idx)
-            end
-        end
+        self.players:refill(self.deck)
     end
 end
 
 function Game:put_down(card)
     if self.move == ATTACKING then
         local ranks = {}
-        for _, card_on_mat in ipairs(self.mat:get_current_play()) do
-            ranks[card_on_mat.rank] = true
+        for _, stack in ipairs(self.mat.in_play) do
+            for _, card_on_mat in ipairs(stack) do
+                ranks[card_on_mat.rank] = true
+            end
         end
-
         if #self.mat.in_play == 0 or ranks[card.rank] then
             self.mat:push_attack(card)
             self.move = DEFENDING
@@ -106,6 +101,7 @@ function Game:give_up()
         end
         self.mat.in_play = {}
         self.players:next()
+        self.players:refill(self.deck)
         self.move = ATTACKING
         return true
     elseif self.move == ATTACKING then
@@ -116,6 +112,7 @@ function Game:give_up()
         end
         self.mat.in_play = {}
         self.players:next()
+        self.players:refill(self.deck)
         return true
     end
 
@@ -135,43 +132,55 @@ function Game:end_game(game)
 end
 
 function Game:draw()
-    for player_idx = 1, #self.players do
-        local player = self.players[player_idx]
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print(player.name, 5, ((player_idx - 1) * 110) + 10)
-        for card_idx, card in ipairs(player.hand) do
-            card:draw()
-            if player_idx == self.players:get_current_idx() and card:touched() then
-                card:highlight()
+    if self.move == END and self.winner then
+        love.graphics.print(self.winner.name .. " has won!", 100, 100, 0, 5)
+    else
+        for player_idx = 1, #self.players do
+            local player = self.players[player_idx]
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.print(player.name, 5, ((player_idx - 1) * 110) + 10)
+            for card_idx, card in ipairs(player.hand) do
+                card:draw()
+                if player_idx == self.players:get_current_idx() and card:touched() then
+                    card:highlight()
+                end
             end
         end
-    end
 
-    for _, stack in ipairs(self.mat.in_play) do
-        for _, card in ipairs(stack) do
+        for _, stack in ipairs(self.mat.in_play) do
+            for _, card in ipairs(stack) do
+                card:draw()
+            end
+        end
+
+        for _, card in ipairs(self.mat.discard_pile) do
             card:draw()
         end
-    end
 
-    for _, card in ipairs(self.mat.discard_pile) do
-        card:draw()
-    end
+        self.deck:draw()
 
-    self.deck:draw()
-
-    local button_text
-    if self.move == ATTACKING and #self.mat.in_play > 0 then
-        button_text = "Discard"
-    elseif self.move == DEFENDING then
-        button_text = "Take"
-    end
-    if button_text then
-        self.button:draw(button_text)
+        local button_text
+        if self.move == ATTACKING and #self.mat.in_play > 0 then
+            button_text = "Discard"
+        elseif self.move == DEFENDING then
+            button_text = "Take"
+        end
+        if button_text then
+            self.button:draw(button_text)
+        end
     end
 end
 
 function Game:update(dt)
     self.elapsed = self.elapsed + dt
+    if #self.deck == 0 then
+        for _, player in ipairs(self.players) do
+            if #player.hand == 0 then
+                self.move = END
+                self.winner = player
+            end
+        end
+    end
 end
 
 function Game:click()
