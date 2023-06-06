@@ -42,12 +42,14 @@ function Players:position_cards(player_idx)
 end
 
 function Players:refill(deck)
-    for player_idx, player in ipairs(self) do
-        while #player.hand < 7 and #deck > 0 do
+    for i = 1, #self do
+        local player_idx = self:get_current_idx()
+        while #self:get_current_player().hand < 7 and #deck > 0 do
             local card = deck:pop()
             self:push_card(card, player_idx)
         end
         self:position_cards(player_idx)
+        self:next()
     end
 end
 

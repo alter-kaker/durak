@@ -101,7 +101,7 @@ function Game:give_up()
         end
         self.mat.in_play = {}
         self.players:next()
-        self.players:refill(self.deck)
+        self.players:refill(self.deck) -- attacker refills first
         self.move = ATTACKING
         return true
     elseif self.move == ATTACKING then
@@ -111,8 +111,8 @@ function Game:give_up()
             end
         end
         self.mat.in_play = {}
+        self.players:refill(self.deck) -- attacker refills first
         self.players:next()
-        self.players:refill(self.deck)
         return true
     end
 
