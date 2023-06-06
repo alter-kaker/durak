@@ -16,6 +16,7 @@ local Game = {
 local Players = require("players")
 local Deck = require("deck")
 local Mat = require("mat")
+local Button = require("button")
 
 function Game:new(players)
     local o = {}
@@ -48,7 +49,8 @@ function Game:load(names)
     end
 
     local decks = #self.players / 2
-    self.deck = Deck:new(decks, images)
+    self.deck   = Deck:new(decks, images)
+    self.button = Button:new(10, 300)
 end
 
 function Game:start()
@@ -70,7 +72,6 @@ function Game:put_down(card)
     if self.move == ATTACKING then
         local ranks = {}
         for _, card_on_mat in ipairs(self.mat:get_current_play()) do
-            print(card_on_mat.rank)
             ranks[card_on_mat.rank] = true
         end
 
@@ -82,7 +83,6 @@ function Game:put_down(card)
         end
     elseif self.move == DEFENDING then
         local attack_card = self.mat:get_current_play()[1]
-        print(self.trump_suit)
         if (card.suit == self.trump_suit and
                 attack_card.suit ~= self.trump_suit)
             or (card.suit == attack_card.suit
@@ -96,23 +96,26 @@ function Game:put_down(card)
     return false
 end
 
-function Game:give_up(player)
+function Game:give_up()
     if self.move == DEFENDING then
         for _, stack in ipairs(self.mat.in_play) do
-            for _, card in stack do
-                table.insert(player.hand, card)
-                self.players.next()
-                self.move = ATTACKING
+            for _, card in ipairs(stack) do
+                local player_idx = self.players:get_current_idx()
+                self.players:push_card(card, player_idx)
             end
         end
+        self.mat.in_play = {}
+        self.players:next()
+        self.move = ATTACKING
         return true
     elseif self.move == ATTACKING then
         for _, stack in ipairs(self.mat.in_play) do
-            for _, card in stack do
-                self.players.next()
-                table.insert(self.mat.discard_pile, card)
+            for _, card in ipairs(stack) do
+                self.mat:push_discard(card)
             end
         end
+        self.mat.in_play = {}
+        self.players:next()
         return true
     end
 
@@ -150,7 +153,21 @@ function Game:draw()
         end
     end
 
+    for _, card in ipairs(self.mat.discard_pile) do
+        card:draw()
+    end
+
     self.deck:draw()
+
+    local button_text
+    if self.move == ATTACKING and #self.mat.in_play > 0 then
+        button_text = "Discard"
+    elseif self.move == DEFENDING then
+        button_text = "Take"
+    end
+    if button_text then
+        self.button:draw(button_text)
+    end
 end
 
 function Game:update(dt)
@@ -158,11 +175,15 @@ function Game:update(dt)
 end
 
 function Game:click()
-    local active_hand = self.players:get_current_player().hand
-    for card_idx, card in ipairs(active_hand) do
-        if card:touched() then
-            if self:put_down(card) then
-                table.remove(active_hand, card_idx)
+    if self.button:touched() then
+        self:give_up(self.players:get_current_player())
+    else
+        local active_hand = self.players:get_current_player().hand
+        for card_idx, card in ipairs(active_hand) do
+            if card:touched() then
+                if self:put_down(card) then
+                    table.remove(active_hand, card_idx)
+                end
             end
         end
     end
