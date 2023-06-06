@@ -24,7 +24,7 @@ function Mat:push_defend(card)
 end
 
 function Mat:get_current_play()
-    return self.in_play[#self.in_play]
+    return self.in_play[#self.in_play] or {}
 end
 
 return Mat

@@ -69,14 +69,12 @@ end
 function Game:put_down(card)
     if self.move == ATTACKING then
         local ranks = {}
-        if #self.mat.in_play > 0 then
-            for _, card_on_mat in ipairs(self.mat:get_current_play()) do
-                print(card_on_mat.rank)
-                ranks[card_on_mat.rank] = true
-            end
+        for _, card_on_mat in ipairs(self.mat:get_current_play()) do
+            print(card_on_mat.rank)
+            ranks[card_on_mat.rank] = true
         end
 
-        if #ranks == 0 or ranks[card.rank] then
+        if #self.mat.in_play == 0 or ranks[card.rank] then
             self.mat:push_attack(card)
             self.move = DEFENDING
             self.players:next()
