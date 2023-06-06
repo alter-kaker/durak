@@ -1,3 +1,4 @@
+local player_types = require("constants").players
 local Players = {}
 
 function Players:new()
@@ -8,9 +9,9 @@ function Players:new()
     return o
 end
 
-function Players:init(names)
-    for i, name in ipairs(names) do
-        self[i] = { name = name, hand = {} }
+function Players:init(players)
+    for i, player in ipairs(players) do
+        self[i] = { name = player.name, type = player.type, hand = {} }
     end
     self.current = 1
 end

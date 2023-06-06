@@ -1,8 +1,3 @@
-local START = "start"
-local ATTACKING = "attacking"
-local DEFENDING = "defending"
-local END = "end"
-
 local Game = {
     images = {},
     players = {},
@@ -10,13 +5,18 @@ local Game = {
     deck = {},
     trump_suit = "",
     mat = {},
-    move = START,
+    move = nil,
     winner = nil
 }
 local Players = require("players")
 local Deck = require("deck")
 local Mat = require("mat")
 local Button = require("button")
+
+local rules = require("rules")
+local ai = require("ai")
+local constants = require("constants")
+local moves, player_types = constants.moves, constants.player_types
 
 function Game:new(players)
     local o = {}
@@ -28,7 +28,7 @@ function Game:new(players)
 
     o.mat = Mat:new()
 
-    o.move = START
+    o.move = moves.START
 
     return o
 end
@@ -54,8 +54,8 @@ function Game:load(names)
 end
 
 function Game:start()
-    if self.move == START then
-        self.move = ATTACKING
+    if self.move == moves.START then
+        self.move = moves.ATTACKING
         self.deck:shuffle()
         self.trump_suit = self.deck[1].suit
         self.players:refill(self.deck)
@@ -88,27 +88,17 @@ function Game:starting_player()
 end
 
 function Game:put_down(card)
-    if self.move == ATTACKING then
-        local ranks = {}
-        for _, stack in ipairs(self.mat.in_play) do
-            for _, card_on_mat in ipairs(stack) do
-                ranks[card_on_mat.rank] = true
-            end
-        end
-        if #self.mat.in_play == 0 or ranks[card.rank] then
+    if self.move == moves.ATTACKING then
+        if rules.valid_attack(card, self.mat.in_play, self.trump_suit) then
             self.mat:push_attack(card)
-            self.move = DEFENDING
+            self.move = moves.DEFENDING
             self.players:next()
             return true
         end
-    elseif self.move == DEFENDING then
-        local attack_card = self.mat:get_current_play()[1]
-        if (card.suit == self.trump_suit and
-                attack_card.suit ~= self.trump_suit)
-            or (card.suit == attack_card.suit
-                and card.rank > attack_card.rank) then
+    elseif self.move == moves.DEFENDING then
+        if rules.valid_defense(card, self.mat.in_play, self.trump_suit) then
             self.mat:push_defend(card)
-            self.move = ATTACKING
+            self.move = moves.ATTACKING
             self.players:next()
             return true
         end
@@ -117,7 +107,7 @@ function Game:put_down(card)
 end
 
 function Game:give_up()
-    if self.move == DEFENDING then
+    if self.move == moves.DEFENDING then
         for _, stack in ipairs(self.mat.in_play) do
             for _, card in ipairs(stack) do
                 local player_idx = self.players:get_current_idx()
@@ -127,9 +117,9 @@ function Game:give_up()
         self.mat.in_play = {}
         self.players:next()
         self.players:refill(self.deck) -- attacker refills first
-        self.move = ATTACKING
+        self.move = moves.ATTACKING
         return true
-    elseif self.move == ATTACKING then
+    elseif self.move == moves.ATTACKING then
         for _, stack in ipairs(self.mat.in_play) do
             for _, card in ipairs(stack) do
                 self.mat:push_discard(card)
@@ -148,7 +138,7 @@ function Game:end_game(game)
     for _, player in self.players do
         if #player.hand == 0 then
             self.winner = player
-            self.move = END
+            self.move = moves.END
             return true
         end
     end
@@ -157,7 +147,7 @@ function Game:end_game(game)
 end
 
 function Game:draw()
-    if self.move == END and self.winner then
+    if self.move == moves.END and self.winner then
         love.graphics.print(self.winner.name .. " has won!", 100, 100, 0, 5)
     else
         for player_idx = 1, #self.players do
@@ -189,9 +179,9 @@ function Game:draw()
         self.deck:draw()
 
         local button_text
-        if self.move == ATTACKING and #self.mat.in_play > 0 then
+        if self.move == moves.ATTACKING and #self.mat.in_play > 0 then
             button_text = "Discard"
-        elseif self.move == DEFENDING then
+        elseif self.move == moves.DEFENDING then
             button_text = "Take"
         end
         if button_text then
@@ -205,22 +195,44 @@ function Game:update(dt)
     if #self.deck == 0 then
         for _, player in ipairs(self.players) do
             if #player.hand == 0 then
-                self.move = END
+                self.move = moves.END
                 self.winner = player
             end
+        end
+    elseif self.players:get_current_player().type == player_types.AI then
+        local hand = self.players:get_current_player().hand
+        local card = ai.compute_move(
+            hand,
+            self.mat.in_play,
+            self.trump_suit,
+            self.move
+        )
+
+        if card then
+            self:put_down(card)
+            for i, c_card in ipairs(hand) do
+                if c_card == card then
+                    table.remove(hand, i)
+                    break
+                end
+            end
+        else
+            self:give_up(self.players:get_current_player())
         end
     end
 end
 
 function Game:click()
-    if self.button:touched() then
-        self:give_up(self.players:get_current_player())
-    else
-        local active_hand = self.players:get_current_player().hand
-        for card_idx, card in ipairs(active_hand) do
-            if card:touched() then
-                if self:put_down(card) then
-                    table.remove(active_hand, card_idx)
+    if self.players:get_current_player().type == player_types.HUMAN then
+        if self.button:touched() then
+            self:give_up(self.players:get_current_player())
+        else
+            local active_hand = self.players:get_current_player().hand
+            for card_idx, card in ipairs(active_hand) do
+                if card:touched() then
+                    if self:put_down(card) then
+                        table.remove(active_hand, card_idx)
+                    end
                 end
             end
         end
