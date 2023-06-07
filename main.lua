@@ -1,7 +1,7 @@
 local Game = require("game")
 local game = Game:new()
 function love.load()
-    game:load({ { name = "marc", type = "human" }, { name = "mir", type = "ai" } })
+    game:load({ { name = "yeshaya", type = "human" }, { name = "abigail", type = "ai" } })
     game:start()
 end
 

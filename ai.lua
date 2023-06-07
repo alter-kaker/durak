@@ -18,7 +18,6 @@ end
 local lowest_value = function(cards, kozyr)
     local lowest_card = cards[1]
     for i = 2, #cards do
-        print("checking card " .. cards[i].card:name())
         lowest_card = lower_value(lowest_card, cards[i], kozyr)
     end
     return lowest_card

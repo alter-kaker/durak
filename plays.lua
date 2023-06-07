@@ -16,9 +16,7 @@ return {
         end
     end,
     withdraw = function(game)
-        print('withdrawing '..game.move)
         if game.move == moves.DEFENDING then
-            print('take')
             for _, stack in ipairs(game.mat.in_play) do
                 for _, card in ipairs(stack) do
                     local player_idx = game.players:get_current_idx()
@@ -30,7 +28,6 @@ return {
             game.players:refill(game.deck) -- attacker refills first
             game.move = moves.ATTACKING
         elseif game.move == moves.ATTACKING then
-            print('discard')
             for _, stack in ipairs(game.mat.in_play) do
                 for _, card in ipairs(stack) do
                     game.mat:push_discard(card)
