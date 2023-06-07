@@ -1,5 +1,5 @@
 local rules = require("rules")
-local moves = require("constants").moves
+local moves = require("moves")
 
 local ai = {
     moves = {

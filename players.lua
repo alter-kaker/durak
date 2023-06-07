@@ -1,4 +1,3 @@
-local player_types = require("constants").players
 local Players = {}
 
 function Players:new()

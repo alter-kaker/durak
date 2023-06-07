@@ -15,8 +15,10 @@ local Button = require("button")
 
 local rules = require("rules")
 local ai = require("ai")
-local constants = require("constants")
-local moves, player_types = constants.moves, constants.player_types
+
+local moves = require('moves')
+local player_types = require('player_types')
+local screens = require('draw')
 
 function Game:new(players)
     local o = {}
@@ -28,7 +30,8 @@ function Game:new(players)
 
     o.mat = Mat:new()
 
-    o.move = moves.START
+    o.move = moves.ATTACKING
+    o.screen = screens.START
 
     return o
 end
@@ -54,16 +57,13 @@ function Game:load(names)
 end
 
 function Game:start()
-    if self.move == moves.START then
-        self.move = moves.ATTACKING
-        self.deck:shuffle()
-        self.trump_suit = self.deck[1].suit
-        self.players:refill(self.deck)
+    self.deck:shuffle()
+    self.trump_suit = self.deck[1].suit
+    self.players:refill(self.deck)
 
-        local starting_player_idx = self:starting_player()
-        if starting_player_idx then
-            self.players.current = starting_player_idx
-        end
+    local starting_player_idx = self:starting_player()
+    if starting_player_idx then
+        self.players.current = starting_player_idx
     end
 end
 
@@ -138,7 +138,7 @@ function Game:end_game(game)
     for _, player in self.players do
         if #player.hand == 0 then
             self.winner = player
-            self.move = moves.END
+            self.screen = screens.END
             return true
         end
     end
@@ -147,47 +147,7 @@ function Game:end_game(game)
 end
 
 function Game:draw()
-    if self.move == moves.END and self.winner then
-        love.graphics.print(self.winner.name .. " has won!", 100, 100, 0, 5)
-    else
-        for player_idx = 1, #self.players do
-            local player = self.players[player_idx]
-            love.graphics.setColor(1, 1, 1)
-            local name_scale = 1
-            if player_idx == self.players:get_current_idx() then
-                name_scale = 1.5
-            end
-            love.graphics.print(player.name, 5, ((player_idx - 1) * 110) + 10, 0, name_scale)
-            for _, card in ipairs(player.hand) do
-                card:draw()
-                if player_idx == self.players:get_current_idx() and card:touched() then
-                    card:highlight()
-                end
-            end
-        end
-
-        for _, stack in ipairs(self.mat.in_play) do
-            for _, card in ipairs(stack) do
-                card:draw()
-            end
-        end
-
-        for _, card in ipairs(self.mat.discard_pile) do
-            card:draw()
-        end
-
-        self.deck:draw()
-
-        local button_text
-        if self.move == moves.ATTACKING and #self.mat.in_play > 0 then
-            button_text = "Discard"
-        elseif self.move == moves.DEFENDING then
-            button_text = "Take"
-        end
-        if button_text then
-            self.button:draw(button_text)
-        end
-    end
+    self.screen(self)
 end
 
 function Game:update(dt)
@@ -195,7 +155,7 @@ function Game:update(dt)
     if #self.deck == 0 then
         for _, player in ipairs(self.players) do
             if #player.hand == 0 then
-                self.move = moves.END
+                self.screen = screens.END
                 self.winner = player
             end
         end
@@ -223,7 +183,10 @@ function Game:update(dt)
 end
 
 function Game:click()
-    if self.players:get_current_player().type == player_types.HUMAN then
+    if self.screen == screens.START then
+        self.screen = screens.PLAY
+    
+    elseif self.players:get_current_player().type == player_types.HUMAN then
         if self.button:touched() then
             self:give_up(self.players:get_current_player())
         else
