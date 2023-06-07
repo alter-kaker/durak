@@ -1,4 +1,5 @@
 local moves = require('moves')
+local player_types = require('player_types')
 
 local screens = {}
 screens.START = function(game)
@@ -14,7 +15,10 @@ screens.PLAY = function(game)
         end
         love.graphics.print(player.name, 5, ((player_idx - 1) * 110) + 10, 0, name_scale)
         for _, card in ipairs(player.hand) do
-            card:draw()
+            if player.type == player_types.HUMAN then
+                card:draw()
+            else card:draw_back()
+            end
             if player_idx == game.players:get_current_idx() and card:touched() then
                 card:highlight()
             end
@@ -28,7 +32,7 @@ screens.PLAY = function(game)
     end
 
     for _, card in ipairs(game.mat.discard_pile) do
-        card:draw()
+        card:draw_back()
     end
 
     game.deck:draw()

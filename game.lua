@@ -40,20 +40,8 @@ end
 function Game:load(names)
     self.players:init(names)
 
-    local images = {}
-
-    for nameIndex, name in ipairs({
-        6, 7, 8, 9, 10, 11, 12, 13, 14,
-        'pip_heart', 'pip_diamond', 'pip_club', 'pip_spade',
-        'mini_heart', 'mini_diamond', 'mini_club', 'mini_spade',
-        'card', 'card_face_down',
-        'face_jack', 'face_queen', 'face_king',
-    }) do
-        images[name] = love.graphics.newImage('images/' .. name .. '.png')
-    end
-
     local decks = #self.players / 2
-    self.deck   = Deck:new(decks, images)
+    self.deck   = Deck:new(decks)
     self.button = Button:new(10, 300)
 end
 

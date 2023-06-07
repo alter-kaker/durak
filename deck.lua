@@ -1,3 +1,4 @@
+local images = require('images')
 local card_width = 53
 local card_height = 73
 
@@ -22,6 +23,14 @@ end
 
 function Card:name()
     return '\tsuit: ' .. self.suit .. ', rank: ' .. self.rank
+end
+
+function Card:draw_back()
+    local x, y = self.position.x, self.position.y
+
+    love.graphics.setColor(1, 1, 1)
+
+    love.graphics.draw(images.card_face_down, x, y)
 end
 
 function Card:draw()
@@ -143,7 +152,7 @@ function Card:touched()
     local x, y = self.position.x, self.position.y
     local mouse_x, mouse_y = love.mouse.getPosition()
     return mouse_x > x and mouse_x < x + card_width
-    and mouse_y > y and mouse_y < y + card_height
+        and mouse_y > y and mouse_y < y + card_height
 end
 
 function Card:highlight()
@@ -158,7 +167,7 @@ end
 
 local Deck = {}
 
-function Deck:new(decks, images)
+function Deck:new(decks)
     local face_images = {
         [11] = "face_jack",
         [12] = "face_queen",
@@ -206,8 +215,9 @@ function Deck:shuffle()
 end
 
 function Deck:draw()
-    for _, card in ipairs(self) do
-        card:draw()
+    self[1]:draw()
+    for i = 2, #self do
+        self[i]:draw_back()
     end
 end
 
