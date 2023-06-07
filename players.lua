@@ -35,6 +35,16 @@ function Players:push_card(card, player_idx)
     table.insert(self[player_idx].hand, card)
 end
 
+function Players:take_card(card, player_idx)
+    local hand = self[player_idx].hand
+    for i, c_card in ipairs(hand) do
+        if c_card == card then
+            table.remove(hand, i)
+            break
+        end
+    end
+end
+
 function Players:position_cards(player_idx)
     for card_idx, card in ipairs(self[player_idx].hand) do
         card:set_position((card_idx * 60) + 10, ((player_idx - 1) * 110) + 30)

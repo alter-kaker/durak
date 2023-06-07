@@ -19,6 +19,7 @@ local ai = require("ai")
 local moves = require('moves')
 local player_types = require('player_types')
 local screens = require('draw')
+local plays = require('plays')
 
 function Game:new(players)
     local o = {}
@@ -87,53 +88,6 @@ function Game:starting_player()
     return starting_player_idx
 end
 
-function Game:put_down(card)
-    if self.move == moves.ATTACKING then
-        if rules.valid_attack(card, self.mat.in_play, self.trump_suit) then
-            self.mat:push_attack(card)
-            self.move = moves.DEFENDING
-            self.players:next()
-            return true
-        end
-    elseif self.move == moves.DEFENDING then
-        if rules.valid_defense(card, self.mat.in_play, self.trump_suit) then
-            self.mat:push_defend(card)
-            self.move = moves.ATTACKING
-            self.players:next()
-            return true
-        end
-    end
-    return false
-end
-
-function Game:give_up()
-    if self.move == moves.DEFENDING then
-        for _, stack in ipairs(self.mat.in_play) do
-            for _, card in ipairs(stack) do
-                local player_idx = self.players:get_current_idx()
-                self.players:push_card(card, player_idx)
-            end
-        end
-        self.mat.in_play = {}
-        self.players:next()
-        self.players:refill(self.deck) -- attacker refills first
-        self.move = moves.ATTACKING
-        return true
-    elseif self.move == moves.ATTACKING then
-        for _, stack in ipairs(self.mat.in_play) do
-            for _, card in ipairs(stack) do
-                self.mat:push_discard(card)
-            end
-        end
-        self.mat.in_play = {}
-        self.players:refill(self.deck) -- attacker refills first
-        self.players:next()
-        return true
-    end
-
-    return false
-end
-
 function Game:end_game(game)
     for _, player in self.players do
         if #player.hand == 0 then
@@ -161,23 +115,17 @@ function Game:update(dt)
         end
     elseif self.players:get_current_player().type == player_types.AI then
         local hand = self.players:get_current_player().hand
-        local card = ai.compute_move(
+        local card_idx = ai(
             hand,
             self.mat.in_play,
             self.trump_suit,
             self.move
         )
 
-        if card then
-            self:put_down(card)
-            for i, c_card in ipairs(hand) do
-                if c_card == card then
-                    table.remove(hand, i)
-                    break
-                end
-            end
+        if card_idx then
+            plays.play(table.remove(hand, card_idx), self)
         else
-            self:give_up(self.players:get_current_player())
+            plays.withdraw(self)
         end
     end
 end
@@ -185,17 +133,14 @@ end
 function Game:click()
     if self.screen == screens.START then
         self.screen = screens.PLAY
-    
     elseif self.players:get_current_player().type == player_types.HUMAN then
         if self.button:touched() then
-            self:give_up(self.players:get_current_player())
+            plays.withdraw(self)
         else
             local active_hand = self.players:get_current_player().hand
             for card_idx, card in ipairs(active_hand) do
-                if card:touched() then
-                    if self:put_down(card) then
-                        table.remove(active_hand, card_idx)
-                    end
+                if card:touched() and rules[self.move](card, self.mat.in_play, self.trump_suit) then
+                    plays.play(table.remove(active_hand, card_idx), self)
                 end
             end
         end
