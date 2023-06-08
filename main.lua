@@ -21,3 +21,7 @@ end
 function love.textinput(text)
     game:input(text)
 end
+
+function love.keypressed(key)
+    game:keypressed(key)
+end

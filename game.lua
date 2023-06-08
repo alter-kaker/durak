@@ -1,3 +1,5 @@
+local utf8 = require("utf8")
+
 local Game = {
     images = {},
     players = {},
@@ -149,6 +151,14 @@ end
 function Game:input(text)
     if self.screen == screens.START then
         self.players[1].name = self.players[1].name .. text
+    end
+end
+
+function Game:keypressed(key)
+    if self.screen == screens.START then
+        if key == "backspace" then
+            self.players[1].name = string.sub(self.players[1].name, 0, utf8.len(self.players[1].name) - 1)
+        end
     end
 end
 
