@@ -21,6 +21,18 @@ local player_types = require('player_types')
 local screens = require('draw')
 local plays = require('plays')
 
+
+local players = {
+    {
+        name = "",
+        type = player_types.HUMAN
+    },
+    {
+        name = "Robet",
+        type = player_types.AI
+    }
+}
+
 function Game:new(players)
     local o = {}
     setmetatable(o, self)
@@ -37,9 +49,8 @@ function Game:new(players)
     return o
 end
 
-function Game:load(names)
-    self.players:init(names)
-
+function Game:load()
+    self.players:init(players)
     local decks = #self.players / 2
     self.deck   = Deck:new(decks)
     self.button = Button:new(10, 300)
@@ -119,7 +130,7 @@ function Game:update(dt)
 end
 
 function Game:click()
-    if self.screen == screens.START then
+    if self.screen == screens.START and self.button:touched() then
         self.screen = screens.PLAY
     elseif self.players:get_current_player().type == player_types.HUMAN then
         if self.button:touched() then
@@ -132,6 +143,12 @@ function Game:click()
                 end
             end
         end
+    end
+end
+
+function Game:input(text)
+    if self.screen == screens.START then
+        self.players[1].name = self.players[1].name .. text
     end
 end
 

@@ -1,8 +1,11 @@
 local moves = require('moves')
 local player_types = require('player_types')
+local input = require('input')
+local font = love.graphics.newFont("Px437_IBM_CGA.ttf")
 
 local screens = {}
 screens.START = function(game)
+    input.textbox.draw("Your Name: ", game.players[1].name, font, 100, 100)
     game.button:draw("start")
 end
 screens.PLAY = function(game)
@@ -17,7 +20,8 @@ screens.PLAY = function(game)
         for _, card in ipairs(player.hand) do
             if player.type == player_types.HUMAN then
                 card:draw()
-            else card:draw_back()
+            else
+                card:draw_back()
             end
             if player_idx == game.players:get_current_idx() and card:touched() then
                 card:highlight()
