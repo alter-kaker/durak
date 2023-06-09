@@ -1,13 +1,16 @@
 local moves = require('moves')
 local player_types = require('player_types')
 local textbox = require('textbox')
+local status = require('status')
 
 local screens = {}
 screens.START = function(game)
+    status.draw(game.status_text, game.font)
     textbox.draw("Your Name: ", game.players[1].name, game.font, 100, 100)
     game.button:draw("start")
 end
 screens.PLAY = function(game)
+    status.draw(game.status_text, game.font)
     for player_idx = 1, #game.players do
         local player = game.players[player_idx]
         love.graphics.setColor(1, 1, 1)

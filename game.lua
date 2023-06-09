@@ -47,14 +47,16 @@ function Game:new(players)
 
     o.move = moves.ATTACKING
     o.screen = screens.START
+    o.status_text = ""
 
     return o
 end
 
+
 function Game:load()
     local button_action = function(game)
         if self.screen == screens.START and self.button:touched() then
-            self.screen = screens.PLAY
+            plays.start_game(self)
         elseif self.players:get_current_player().type == player_types.HUMAN then
             if self.button:touched() then
                 plays.withdraw(self)

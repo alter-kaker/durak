@@ -1,18 +1,23 @@
+local utf8 = require('utf8')
 local moves = require('moves')
-local rules = require('rules')
+local screens = require('screens')
+
+local function validate_player_name(name)
+    return utf8.len(name) < 1
+end
 
 return {
     play = function(card, game)
         if game.move == moves.ATTACKING then
-                game.mat:push_attack(card)
-                game.move = moves.DEFENDING
+            game.mat:push_attack(card)
+            game.move = moves.DEFENDING
 
-                game.players:next()
+            game.players:next()
         elseif game.move == moves.DEFENDING then
-                game.mat:push_defend(card)
-                game.move = moves.ATTACKING
-                game.players:next()
-                return true
+            game.mat:push_defend(card)
+            game.move = moves.ATTACKING
+            game.players:next()
+            return true
         end
     end,
     withdraw = function(game)
@@ -36,6 +41,15 @@ return {
             game.mat.in_play = {}
             game.players:refill(game.deck) -- attacker refills first
             game.players:next()
+        end
+    end,
+    start_game = function(game)
+        print('validating')
+        if validate_player_name(game.players[1].name) then
+            game.status_text = "Please enter a valid name"
+        else
+            game.status_text = ""
+            game.screen = screens.PLAY
         end
     end
 }
