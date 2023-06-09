@@ -52,11 +52,25 @@ function Game:new(players)
 end
 
 function Game:load()
+    local button_action = function(game)
+        if self.screen == screens.START and self.button:touched() then
+            self.screen = screens.PLAY
+        elseif self.players:get_current_player().type == player_types.HUMAN then
+            if self.button:touched() then
+                plays.withdraw(self)
+            end
+        end
+    end
     self.players:init(players)
     local decks = #self.players / 2
     self.deck   = Deck:new(decks)
     self.font   = love.graphics.newFont("Px437_IBM_CGA.ttf")
-    self.button = Button:new(self.font, 10, 300)
+    self.button = Button:new(
+        button_action,
+        self.font,
+        10,
+        300
+    )
 end
 
 function Game:start()
@@ -133,18 +147,12 @@ function Game:update(dt)
 end
 
 function Game:click()
-    if self.screen == screens.START and self.button:touched() then
-        self.screen = screens.PLAY
-    elseif self.players:get_current_player().type == player_types.HUMAN then
-        if self.button:touched() then
-            plays.withdraw(self)
-        else
-            local active_hand = self.players:get_current_player().hand
-            for card_idx, card in ipairs(active_hand) do
-                if card:touched() and rules[self.move](card, self.mat.in_play, self.trump_suit) then
-                    plays.play(table.remove(active_hand, card_idx), self)
-                end
-            end
+    self.button.on_click(self)
+
+    local active_hand = self.players:get_current_player().hand
+    for card_idx, card in ipairs(active_hand) do
+        if card:touched() and rules[self.move](card, self.mat.in_play, self.trump_suit) then
+            plays.play(table.remove(active_hand, card_idx), self)
         end
     end
 end

@@ -1,10 +1,11 @@
 local Button = {}
 
-function Button:new(font, x, y)
+function Button:new(action, font, x, y)
     local o = {
         x = x,
         y = y,
-        font = font
+        font = font,
+        on_click = action,
     }
     setmetatable(o, self)
     self.__index = self
