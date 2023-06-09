@@ -1,5 +1,4 @@
 local Game = require("game")
-local text_input = require('input')
 local game = Game:new()
 function love.load()
     game:load({ { name = "yeshaya", type = "human" }, { name = "abigail", type = "ai" } })

@@ -1,4 +1,4 @@
-local utf8 = require("utf8")
+local input = require("input")
 
 local Game = {
     images = {},
@@ -20,7 +20,7 @@ local ai = require("ai")
 
 local moves = require('moves')
 local player_types = require('player_types')
-local screens = require('draw')
+local screens = require('screens')
 local plays = require('plays')
 
 
@@ -156,8 +156,8 @@ end
 
 function Game:keypressed(key)
     if self.screen == screens.START then
-        if key == "backspace" then
-            self.players[1].name = string.sub(self.players[1].name, 0, utf8.len(self.players[1].name) - 1)
+        if input[key] then
+            input[key](self)
         end
     end
 end
