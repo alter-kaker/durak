@@ -1,7 +1,11 @@
 local Button = {}
 
-function Button:new(x, y)
-    local o = { x = x, y = y }
+function Button:new(font, x, y)
+    local o = {
+        x = x,
+        y = y,
+        font = font
+    }
     setmetatable(o, self)
     self.__index = self
 
@@ -9,18 +13,21 @@ function Button:new(x, y)
 end
 
 function Button:draw(text)
+    local text_obj = love.graphics.newText(self.font, text)
+    local width, height = text_obj:getDimensions()
+    local box_offset = 4
     love.graphics.setColor(.8, .6, .5)
     love.graphics.rectangle(
         "fill",
-        self.x,
-        self.y,
-        150,
-        30
+        self.x - box_offset,
+        self.y - box_offset,
+        width + (2 * box_offset),
+        height + (2 * box_offset)
     )
 
     love.graphics.setColor(0, 0, 0)
-    love.graphics.print(
-        text,
+    love.graphics.draw(
+        text_obj,
         self.x,
         self.y
     )

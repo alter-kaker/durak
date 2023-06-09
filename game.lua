@@ -55,7 +55,8 @@ function Game:load()
     self.players:init(players)
     local decks = #self.players / 2
     self.deck   = Deck:new(decks)
-    self.button = Button:new(10, 300)
+    self.font   = love.graphics.newFont("Px437_IBM_CGA.ttf")
+    self.button = Button:new(self.font, 10, 300)
 end
 
 function Game:start()

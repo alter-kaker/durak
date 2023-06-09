@@ -1,22 +1,18 @@
 local moves = require('moves')
 local player_types = require('player_types')
 local textbox = require('textbox')
-local font = love.graphics.newFont("Px437_IBM_CGA.ttf")
 
 local screens = {}
 screens.START = function(game)
-    textbox.draw("Your Name: ", game.players[1].name, font, 100, 100)
+    textbox.draw("Your Name: ", game.players[1].name, game.font, 100, 100)
     game.button:draw("start")
 end
 screens.PLAY = function(game)
     for player_idx = 1, #game.players do
         local player = game.players[player_idx]
         love.graphics.setColor(1, 1, 1)
-        local name_scale = 1
-        if player_idx == game.players:get_current_idx() then
-            name_scale = 1.5
-        end
-        love.graphics.print(player.name, 5, ((player_idx - 1) * 110) + 10, 0, name_scale)
+        local player_name = love.graphics.newText(game.font, player.name)
+        love.graphics.draw(player_name, 5, ((player_idx - 1) * 110) + 10, 0)
         for _, card in ipairs(player.hand) do
             if player.type == player_types.HUMAN then
                 card:draw()
